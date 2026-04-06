@@ -1,0 +1,175 @@
+'use client';
+
+import { useState } from 'react';
+import { Trophy, Medal, Crown, Flame, Zap, Globe, Users, Copy, Check, Dumbbell } from 'lucide-react';
+
+// --- ДАНІ ДЛЯ ГЛОБАЛЬНОГО РЕЙТИНГУ ---
+const globalLeaders = [
+  { id: 1, name: 'Олекс Грім', level: 67, fire: '24 500', quests: 342, icon: '🔥', medal: '🥇' },
+  { id: 2, name: 'Майя Шторм', level: 64, fire: '23 100', quests: 318, icon: '⚡', medal: '🥈' },
+  { id: 3, name: 'Йордан Сталь', level: 62, fire: '22 400', quests: 305, icon: '💎', medal: '🥉' },
+  { id: 4, name: 'Сем Фенікс', level: 58, fire: '20 800', quests: 289, icon: '🦅' },
+  { id: 5, name: 'Кейсі Блейз', level: 56, fire: '19 900', quests: 276, icon: '🌟' },
+  { id: 8, name: 'Ви', level: 42, fire: '8 450', quests: 156, icon: '🎯', isMe: true },
+  { id: 9, name: 'Тейлор Свіфт', level: 40, fire: '7 900', quests: 142, icon: '🎨' },
+  { id: 10, name: 'Дрю Хантер', level: 38, fire: '7 200', quests: 135, icon: '🎪' },
+];
+
+// --- ДАНІ ДЛЯ ВКЛАДКИ "ДРУЗІ" ---
+const friendsLeaders = [
+  { id: 1, name: 'Сем Фенікс', level: 58, fire: '20 800', quests: 289, icon: '🦅', medal: '🥇' },
+  { id: 2, name: 'Кейсі Блейз', level: 56, fire: '19 900', quests: 276, icon: '🌟', medal: '🥈' },
+  { id: 8, name: 'Ви', level: 42, fire: '8 450', quests: 156, icon: '🎯', isMe: true, medal: '🥉' },
+  { id: 9, name: 'Тейлор Свіфт', level: 40, fire: '7 900', quests: 142, icon: '🎨' },
+  { id: 10, name: 'Дрю Хантер', level: 38, fire: '7 200', quests: 135, icon: '🎪' },
+];
+
+export default function LeaderboardPage() {
+  const [tab, setTab] = useState('global'); // 'global' або 'friends'
+  const [copied, setCopied] = useState(false);
+
+  const inviteLink = "https://herofit.app/invite/nastya-2026";
+
+  // Вибираємо дані залежно від активної вкладки
+  const currentLeaders = tab === 'global' ? globalLeaders : friendsLeaders;
+  
+  // Топ-3 теж має змінюватися залежно від вкладки
+  const currentTopThree = currentLeaders.slice(0, 3).map((hero, index) => ({
+    ...hero,
+    rank: index + 1,
+    color: index === 0 ? 'border-yellow-500' : index === 1 ? 'border-slate-500/50' : 'border-orange-700/50',
+    shadow: index === 0 ? 'shadow-yellow-500/20' : index === 1 ? 'shadow-slate-500/10' : 'shadow-orange-900/10'
+  }));
+
+  // Переставляємо для п'єдесталу: 2, 1, 3
+  const pedestalOrder = [currentTopThree[1], currentTopThree[0], currentTopThree[2]];
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(inviteLink);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="min-h-screen bg-[#0b0f1a] text-white selection:bg-cyan-500/30">
+      
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] bg-cyan-600/10 rounded-full blur-[140px]" />
+        <div className="absolute bottom-[5%] right-[-5%] w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[120px]" />
+      </div>
+
+      <div className="max-w-6xl mx-auto p-6 lg:p-12 relative z-10">
+        
+        <header className="mb-12">
+          <h1 className="text-4xl md:text-6xl font-black mb-3 tracking-tighter uppercase italic leading-none text-white">
+            Таблиця <span className="text-yellow-500">Лідерів</span>
+          </h1>
+          <p className="text-slate-500 text-[10px] font-black uppercase tracking-[5px] opacity-70">
+            {tab === 'global' ? 'Змагайся з героями всього світу' : 'Твої друзі та їхні досягнення'}
+          </p>
+        </header>
+
+        {/* Перемикачі */}
+        <div className="flex gap-3 mb-16">
+          <button 
+            onClick={() => setTab('global')} 
+            className={`flex items-center gap-3 px-8 py-3.5 rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all border ${
+              tab === 'global' 
+                ? 'bg-[#22c55e] text-black border-[#22c55e] shadow-[0_0_30px_rgba(34,197,94,0.4)]' 
+                : 'bg-white/5 text-slate-500 border-white/5 hover:border-white/10'
+            }`}
+          >
+            <Globe size={14} /> Глобальний
+          </button>
+          <button 
+            onClick={() => setTab('friends')} 
+            className={`flex items-center gap-3 px-8 py-3.5 rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all border ${
+              tab === 'friends' 
+                ? 'bg-[#22c55e] text-black border-[#22c55e] shadow-[0_0_30px_rgba(34,197,94,0.4)]' 
+                : 'bg-white/5 text-slate-500 border-white/5 hover:border-white/10'
+            }`}
+          >
+            <Users size={14} /> Друзі
+          </button>
+        </div>
+
+        {/* П'єдестал (TOP-3 змінюється!) */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20 items-end">
+          {pedestalOrder.map((hero) => (
+            <div 
+              key={hero.name} 
+              className={`glass-card p-10 flex flex-col items-center justify-center transition-all duration-500 border-2 shadow-2xl ${hero.color} ${hero.shadow} ${
+                hero.rank === 1 ? 'md:h-80 z-20 scale-105' : 'md:h-64 opacity-80'
+              }`}
+            >
+              <div className="glass-reflection" />
+              <span className={`block mb-4 ${hero.rank === 1 ? 'text-7xl' : 'text-5xl'}`}>{hero.icon}</span>
+              <h3 className="font-black text-sm uppercase tracking-widest mb-1">{hero.name}</h3>
+              <p className="text-[10px] font-bold text-slate-500 mb-5 uppercase tracking-widest">Level {hero.level}</p>
+              <div className={`flex items-center gap-2 bg-black/40 px-5 py-2 rounded-full border border-white/10 font-black text-[10px] ${hero.rank === 1 ? 'text-yellow-500' : 'text-slate-400'}`}>
+                 🏆 #{hero.rank}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Таблиця лідерів */}
+        <div className="glass-card overflow-hidden shadow-2xl mb-20">
+          <div className="glass-reflection" />
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-white/5 text-[10px] font-black uppercase tracking-[3px] text-slate-500 bg-white/[0.02]">
+                <th className="p-8">Місце</th>
+                <th className="p-8">Герой</th>
+                <th className="p-8 text-center">Рівень</th>
+                <th className="p-8 text-center text-orange-500">Fire</th>
+                <th className="p-8 text-right">Тренувань</th>
+              </tr>
+            </thead>
+            <tbody className="text-sm font-bold">
+              {currentLeaders.map((hero, index) => (
+                <tr 
+                  key={hero.id} 
+                  className={`transition-colors border-b border-white/5 last:border-0 ${hero.isMe ? 'bg-green-500/10' : 'hover:bg-white/[0.02]'}`}
+                >
+                  <td className="p-8">
+                    {hero.medal ? <span className="text-2xl">{hero.medal}</span> : <span className="text-slate-600 text-[12px] font-black ml-2">#{index + 1}</span>}
+                  </td>
+                  <td className="p-8 flex items-center gap-4">
+                    <span className="text-2xl">{hero.icon}</span>
+                    <span className={hero.isMe ? 'text-green-400 font-black' : 'text-white'}>
+                      {hero.name} {hero.isMe && <span className="ml-3 text-[9px] bg-green-500 text-black px-2.5 py-1 rounded-md uppercase">Ви</span>}
+                    </span>
+                  </td>
+                  <td className="p-8 text-center text-cyan-400 font-black text-xl">{hero.level}</td>
+                  <td className="p-8 text-center text-orange-500 font-black text-xl">{hero.fire}</td>
+                  <td className="p-8 text-right text-slate-400 text-xl">{hero.quests}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Блок запрошення друзів */}
+        <div className="glass-card p-12 text-center shadow-2xl relative mb-10 overflow-hidden">
+           <div className="glass-reflection" />
+           <h2 className="text-3xl md:text-4xl font-black mb-4 uppercase tracking-tighter italic">
+             Запроси друзів та <span className="text-green-400">отримай винагороди</span>
+           </h2>
+           <div className="flex flex-col sm:flex-row gap-5 justify-center items-center relative z-10 mt-10">
+             <div className="bg-slate-950/50 border border-white/10 px-8 py-5 rounded-2xl text-slate-300 text-xs font-mono w-full max-w-lg shadow-inner overflow-hidden text-ellipsis whitespace-nowrap">
+               {inviteLink}
+             </div>
+             <button 
+               onClick={copyToClipboard}
+               className={`w-full sm:w-56 font-black py-5 rounded-2xl uppercase tracking-[2px] text-[11px] transition-all flex items-center justify-center gap-3 active:scale-95 shadow-xl ${copied ? 'bg-green-500 text-black' : 'bg-cyan-400 text-black hover:bg-cyan-300'}`}
+             >
+               {copied ? <Check size={16} /> : <Copy size={16} />}
+               {copied ? 'ГОТОВО!' : 'КОПІЮВАТИ'}
+             </button>
+           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
