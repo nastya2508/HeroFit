@@ -1,5 +1,5 @@
 'use client';
-
+import api from '@/app/lib/api';
 import { useState } from 'react';
 import Link from 'next/link';
 import { 
@@ -13,7 +13,6 @@ const categories = [
   { id: 'Сила', name: 'Сила', Icon: Dumbbell },
 ];
 
-// Твій список вправ (я додав поле video_url до кожної, щоб воно відкривалось)
 const exercises = [
   {
     id: 1,
@@ -129,12 +128,9 @@ const exercises = [
 
 export default function ExercisesPage() {
   const [activeTab, setActiveTab] = useState('all');
-  
-  // ДОДАНО: Стейт для модального вікна та завантаження
   const [selectedExercise, setSelectedExercise] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // ТВОЯ ОРИГІНАЛЬНА ЛОГІКА (ЗБЕРЕЖЕНО)
   const handleExerciseClick = (ex: any) => {
     const today = new Date().toISOString().split('T')[0];
     const history = JSON.parse(localStorage.getItem('video_history') || '{}');
@@ -151,41 +147,32 @@ export default function ExercisesPage() {
 
     if (newStats.xp >= newStats.level * 1000) {
       newStats.level += 1;
-      alert(`🔥 LEVEL UP! Вітаємо, Анастасію! Тепер ти ${newStats.level} рівня!`);
+      alert(`🔥 LEVEL UP! Вітаємо! Тепер ти ${newStats.level} рівня!`);
     }
 
     localStorage.setItem('hero_stats', JSON.stringify(newStats));
-    
-    // ТЕПЕР ЗАМІСТЬ ПРОСТОГО ALERT — ВІДКРИВАЄМО МОДАЛКУ
     setSelectedExercise(ex);
   };
 
-  // НОВА ФУНКЦІЯ: ЗАПИТ ДО БЕКЕНДУ ПРИ ЗАВЕРШЕННІ
   const handleCompleteOnBackend = async () => {
     if (!selectedExercise) return;
     setIsLoading(true);
-    
-    const token = localStorage.getItem('access_token');
 
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/exercises/${selectedExercise.id}/complete/`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await api.post(`/exercises/${selectedExercise.id}/complete/`);
+      const data = response.data;
 
-      if (response.ok) {
-        const data = await response.json();
+      if (response.status === 200 || response.status === 201) {
         alert(`✅ ВИКОНАНО: ${selectedExercise.title}!\nТвій рівень в базі: ${data.current_level}\nСила героя: ${data.current_strength}`);
-        setSelectedExercise(null); // Закриваємо модалку
-      } else {
-        alert("Помилка! Можливо, термін дії токена закінчився. Перезайдіть у профіль.");
+        setSelectedExercise(null);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Помилка запиту:", error);
-      alert("Не вдалося з'єднатися з сервером Django.");
+      if (error.response?.status === 401) {
+        alert("Помилка! Термін дії токена закінчився. Перезайдіть у профіль.");
+      } else {
+        alert("Не вдалося з'єднатися з сервером Django.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -198,13 +185,11 @@ export default function ExercisesPage() {
   return (
     <div className="min-h-screen bg-[#0b0f1a] text-white p-6 lg:p-12 relative overflow-hidden">
       
-      {/* Заголовок (Без змін) */}
       <header className="mb-10 relative z-10">
         <h1 className="text-4xl sm:text-5xl font-black mb-3 tracking-tighter uppercase italic leading-none">Бібліотека <span className="text-cyan-400">Вправ</span></h1>
         <p className="text-slate-500 text-lg font-bold uppercase tracking-widest opacity-70">Оберіть своє тренування та стань легендою</p>
       </header>
 
-      {/* Перемикачі режимів (Без змін) */}
       <div className="flex gap-4 mb-8 relative z-10">
         <button className="flex items-center gap-3 bg-white/5 border border-white/10 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[2px] text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.1)]">
           <Dumbbell size={16} /> Вправи
@@ -218,7 +203,6 @@ export default function ExercisesPage() {
         </Link>
       </div>
 
-      {/* Фільтри категорій (Без змін) */}
       <div className="flex gap-3 mb-12 overflow-x-auto no-scrollbar py-2 relative z-10">
         {categories.map((cat) => (
           <button
@@ -236,7 +220,6 @@ export default function ExercisesPage() {
         ))}
       </div>
 
-      {/* Сітка карток (Логіка кліку оновлена) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 relative z-10">
         {filteredExercises.map((ex) => (
           <div 
@@ -271,12 +254,10 @@ export default function ExercisesPage() {
         ))}
       </div>
 
-      {/* --- ДОДАНО: МОДАЛЬНЕ ВІКНО З ВІДЕО --- */}
       {selectedExercise && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl transition-all">
           <div className="relative bg-[#0f172a] border border-white/10 w-full max-w-3xl rounded-[40px] overflow-hidden shadow-[0_0_80px_rgba(34,211,238,0.15)]">
             
-            {/* Кнопка закрити */}
             <button 
               onClick={() => setSelectedExercise(null)}
               className="absolute top-6 right-6 z-10 bg-white/5 hover:bg-red-500/20 hover:text-red-500 p-3 rounded-2xl transition-all border border-white/5"
@@ -284,7 +265,6 @@ export default function ExercisesPage() {
               <X size={24} />
             </button>
 
-            {/* Відео */}
             <div className="aspect-video w-full bg-black shadow-inner">
               <iframe
                 width="100%"
@@ -298,7 +278,6 @@ export default function ExercisesPage() {
               ></iframe>
             </div>
 
-            {/* Опис та Кнопка Завершити */}
             <div className="p-8 flex flex-col md:flex-row justify-between items-center gap-6 bg-gradient-to-b from-[#161b2a] to-[#0b0f1a]">
               <div className="text-center md:text-left">
                 <h2 className="text-2xl font-black italic uppercase mb-1 tracking-tight">{selectedExercise.title}</h2>
