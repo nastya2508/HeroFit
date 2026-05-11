@@ -6,13 +6,64 @@ import Link from 'next/link';
 
 export default function RegisterPage() {
   const [gender, setGender] = useState('male');
+  const [mascotType, setMascotType] = useState('chubby'); // chubby, normal, fit
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
+  const [error, setError] = useState('');
   const router = useRouter();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('Паролі не збігаються!');
+      return;
+    }
+
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/register/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: formData.email,
+          email: formData.email,
+          password: formData.password,
+          name: formData.name,
+          gender: gender
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        localStorage.setItem('access_token', data.access);
+        localStorage.setItem('refresh_token', data.refresh);
+        
+        // --- ЛОГІКА ЗБЕРЕЖЕННЯ ОБРАНОЇ ФОРМИ ---
+        // Створюємо шлях на основі форми та статі
+        const genderSuffix = gender === 'female' ? '_female' : '';
+        const avatarPath = `/heroes/mascot_${mascotType}${genderSuffix}.png`;
+        
+        localStorage.setItem('hero_avatar', avatarPath);
+
+        router.push('/onboarding');
+      } else {
+        setError(data.detail || 'Помилка при реєстрації');
+      }
+    } catch (err) {
+      setError('Не вдалося підключитися до сервера');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#0f172a] flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-md bg-slate-800/50 backdrop-blur-xl border border-slate-700 rounded-[32px] p-8 shadow-2xl mt-10">
         
-        {/* Логотип HF */}
         <div className="flex items-center justify-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-full border-2 border-cyan-400 flex items-center justify-center font-bold text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.4)] text-lg">
             HF
@@ -21,102 +72,107 @@ export default function RegisterPage() {
         </div>
 
         <h1 className="text-3xl font-bold text-center text-white mb-2">Створити акаунт</h1>
-        <p className="text-slate-400 text-center mb-8 text-sm">Почніть свою подорож до героя</p>
+        
+        {error && <p className="text-red-400 text-center text-xs font-bold mb-4 uppercase">{error}</p>}
 
-        <form className="space-y-4">
-          {/* Поле Ім'я */}
-          <div>
-            <label className="block text-[10px] font-bold text-slate-500 mb-2 ml-1 uppercase tracking-widest">Ім'я</label>
-            <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm">👤</span>
-              <input type="text" placeholder="Ваше ім'я" className="w-full bg-slate-900/50 border border-slate-700 rounded-xl py-3 pl-12 pr-4 text-white focus:border-cyan-500 outline-none transition-all" />
-            </div>
+        <form className="space-y-4" onSubmit={handleSubmit}>
+          {/* Ім'я та Email */}
+          <div className="space-y-4">
+              <input 
+                required
+                type="text" 
+                value={formData.name}
+                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                placeholder="Ваше ім'я" 
+                className="w-full bg-slate-900/50 border border-slate-700 rounded-xl py-3 px-4 text-white focus:border-cyan-500 outline-none transition-all" 
+              />
+              <input 
+                required
+                type="email" 
+                value={formData.email}
+                onChange={(e) => setFormData({...formData, email: e.target.value})}
+                placeholder="Email" 
+                className="w-full bg-slate-900/50 border border-slate-700 rounded-xl py-3 px-4 text-white focus:border-cyan-500 outline-none transition-all" 
+              />
           </div>
 
-          {/* Поле Email */}
-          <div>
-            <label className="block text-[10px] font-bold text-slate-500 mb-2 ml-1 uppercase tracking-widest">Email</label>
-            <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm">📧</span>
-              <input type="email" placeholder="ваш@email.com" className="w-full bg-slate-900/50 border border-slate-700 rounded-xl py-3 pl-12 pr-4 text-white focus:border-cyan-500 outline-none transition-all" />
-            </div>
-          </div>
-
-          {/* Паролі в один рядок */}
+          {/* Паролі */}
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-[10px] font-bold text-slate-500 mb-2 ml-1 uppercase tracking-widest">Пароль</label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm">🔒</span>
-                <input type="password" placeholder="Мін. 6" className="w-full bg-slate-900/50 border border-slate-700 rounded-xl py-3 pl-11 pr-2 text-white focus:border-cyan-500 outline-none text-xs transition-all" />
-              </div>
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold text-slate-500 mb-2 ml-1 uppercase tracking-widest">Повтор</label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm">🔒</span>
-                <input type="password" placeholder="Пароль" className="w-full bg-slate-900/50 border border-slate-700 rounded-xl py-3 pl-11 pr-2 text-white focus:border-cyan-500 outline-none text-xs transition-all" />
-              </div>
-            </div>
+              <input 
+                required
+                type="password" 
+                value={formData.password}
+                onChange={(e) => setFormData({...formData, password: e.target.value})}
+                placeholder="Пароль" 
+                className="w-full bg-slate-900/50 border border-slate-700 rounded-xl py-3 px-4 text-white focus:border-cyan-500 outline-none text-xs transition-all" 
+              />
+              <input 
+                required
+                type="password" 
+                value={formData.confirmPassword}
+                onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
+                placeholder="Повтор" 
+                className="w-full bg-slate-900/50 border border-slate-700 rounded-xl py-3 px-4 text-white focus:border-cyan-500 outline-none text-xs transition-all" 
+              />
           </div>
 
-          {/* ВИБІР СТАТІ (ОНОВЛЕНИЙ) */}
-          <div>
-            <label className="block text-[10px] font-bold text-slate-500 mb-3 ml-1 uppercase tracking-widest">Ваш персонаж</label>
-            <div className="grid grid-cols-2 gap-4">
+          {/* ВИБІР СТАТІ */}
+          <div className="grid grid-cols-2 gap-4 pt-2">
               <button 
                 type="button" 
                 onClick={() => setGender('male')} 
-                className={`relative py-5 rounded-2xl border-2 transition-all duration-300 flex flex-col items-center gap-2 ${
-                  gender === 'male' 
-                    ? 'border-cyan-400 bg-cyan-400/10 shadow-[0_0_20px_rgba(34,211,238,0.2)] scale-105' 
-                    : 'border-slate-700 bg-slate-900/40 opacity-50 hover:opacity-100'
+                className={`py-3 rounded-xl border-2 font-black uppercase text-[10px] tracking-widest transition-all ${
+                  gender === 'male' ? 'border-cyan-400 bg-cyan-400/10 text-cyan-400' : 'border-slate-700 text-slate-500'
                 }`}
               >
-                {gender === 'male' && <div className="absolute top-2 right-2 w-2 h-2 bg-cyan-400 rounded-full animate-ping" />}
-                <span className="text-3xl">👦</span>
-                <span className={`text-[10px] font-black uppercase tracking-widest ${gender === 'male' ? 'text-cyan-400' : 'text-slate-400'}`}>Герой</span>
+                👦 Герой
               </button>
-
               <button 
                 type="button" 
                 onClick={() => setGender('female')} 
-                className={`relative py-5 rounded-2xl border-2 transition-all duration-300 flex flex-col items-center gap-2 ${
-                  gender === 'female' 
-                    ? 'border-green-400 bg-green-400/10 shadow-[0_0_20px_rgba(74,222,128,0.2)] scale-105' 
-                    : 'border-slate-700 bg-slate-900/40 opacity-50 hover:opacity-100'
+                className={`py-3 rounded-xl border-2 font-black uppercase text-[10px] tracking-widest transition-all ${
+                  gender === 'female' ? 'border-green-400 bg-green-400/10 text-green-400' : 'border-slate-700 text-slate-500'
                 }`}
               >
-                {gender === 'female' && <div className="absolute top-2 right-2 w-2 h-2 bg-green-400 rounded-full animate-ping" />}
-                <span className="text-3xl">👧</span>
-                <span className={`text-[10px] font-black uppercase tracking-widest ${gender === 'female' ? 'text-green-400' : 'text-slate-400'}`}>Героїня</span>
+                👧 Героїня
               </button>
+          </div>
+
+          {/* НОВИЙ БЛОК: ВИБІР ФОРМИ МАСКОТА */}
+          <div className="pt-2">
+            <label className="block text-[10px] font-bold text-slate-500 mb-3 ml-1 uppercase tracking-widest">Твоя початкова форма</label>
+            <div className="grid grid-cols-3 gap-2">
+                {[
+                    { id: 'chubby', label: 'Пухляш', icon: '☁️' },
+                    { id: 'normal', label: 'Стрункий', icon: '✨' },
+                    { id: 'fit', label: 'Качок', icon: '🦾' }
+                ].map((type) => (
+                    <button 
+                        key={type.id}
+                        type="button"
+                        onClick={() => setMascotType(type.id)}
+                        className={`flex flex-col items-center py-3 rounded-xl border-2 transition-all ${
+                            mascotType === type.id 
+                            ? 'border-orange-500 bg-orange-500/10 text-orange-500' 
+                            : 'border-slate-700 text-slate-500'
+                        }`}
+                    >
+                        <span className="text-xl mb-1">{type.icon}</span>
+                        <span className="text-[8px] font-black uppercase tracking-tighter">{type.label}</span>
+                    </button>
+                ))}
             </div>
           </div>
 
-          {/* ВЕЛИКА КНОПКА (ТЕПЕР ПРАЦЮЄ!) */}
           <button 
-            type="button"
-            onClick={() => router.push('/onboarding')}
-            className="w-full bg-gradient-to-r from-orange-500 via-yellow-400 to-green-400 hover:brightness-110 text-slate-950 font-black py-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-[0_10px_20px_rgba(74,222,128,0.2)] mt-6 uppercase text-sm active:scale-95"
+            type="submit"
+            className="w-full bg-gradient-to-r from-orange-500 via-yellow-400 to-green-400 text-slate-950 font-black py-4 rounded-xl shadow-xl mt-4 uppercase text-sm active:scale-95 transition-all"
           >
             Зареєструватися <span>→</span>
           </button>
         </form>
 
-        {/* Переваги */}
-        <div className="mt-8 space-y-2 px-2">
-          <div className="flex items-center gap-2 text-[10px] text-slate-300">
-             <span className="text-green-400 font-bold">✔</span> Відстежуйте свій прогрес
-          </div>
-          <div className="flex items-center gap-2 text-[10px] text-slate-300">
-             <span className="text-green-400 font-bold">✔</span> Заробляйте Fire бали
-          </div>
-        </div>
-
-        <div className="relative my-8"><div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-700"></div></div><div className="relative flex justify-center text-[10px] uppercase font-bold tracking-widest"><span className="bg-[#1b253b] px-4 text-slate-500">або</span></div></div>
-
-        <p className="text-center text-slate-400 text-sm">
+        <p className="text-center text-slate-400 text-sm mt-8">
           Вже є акаунт? <Link href="/login" className="text-green-400 hover:underline font-bold">Увійти</Link>
         </p>
       </div>

@@ -1,11 +1,7 @@
-// @ts-nocheck
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
+  experimental: {
+    allowedDevOrigins: ['192.168.0.100', 'localhost:3000'],
   },
 };
 
