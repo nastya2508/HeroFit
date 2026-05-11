@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL:  https://herofit-backend-2.onrender.com, // Адреса твого бекенду
+  baseURL:  "https://herofit-backend-2.onrender.com", // Адреса твого бекенду
 });
 
 // 1. Перед кожним запитом додаємо Access Token
@@ -25,7 +25,7 @@ api.interceptors.response.use(
         const refreshToken = localStorage.getItem('refresh_token');
         
         // Спроба отримати новий Access токен
-        const res = await axios.post('http://127.0.0.1:8000/api/token/refresh/', {
+        const res = await axios.post(' https://herofit-backend-2.onrender.com/api/token/refresh/', {
           refresh: refreshToken
         });
 
