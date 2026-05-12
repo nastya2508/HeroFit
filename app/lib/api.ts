@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL:  "https://herofit-backend-2.onrender.com", // Адреса твого бекенду
+  baseURL:  "https://herofit-backend-2.onrender.com/api/", // Адреса твого бекенду
 });
 
 // 1. Перед кожним запитом додаємо Access Token
