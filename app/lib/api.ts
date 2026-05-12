@@ -1,13 +1,15 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL:  "https://herofit-backend-2.onrender.com/api/", // Адреса твого бекенду
+  // Обов'язково з /api в кінці
+  baseURL: "https://herofit-backend-2.onrender.com/api", 
 });
 
 // 1. Перед кожним запитом додаємо Access Token
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('access_token');
   if (token) {
+    // ТУТ МАЮТЬ БУТИ ЗВОРОТНІ ЛАПКИ ` `
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
@@ -24,14 +26,13 @@ api.interceptors.response.use(
       try {
         const refreshToken = localStorage.getItem('refresh_token');
         
-        // Спроба отримати новий Access токен
-        const res = await axios.post(' https://herofit-backend-2.onrender.com/api/token/refresh/', {
-          refresh: refreshToken
+        // Тут теж повна адреса до токена
+        const res = await axios.post('https://herofit-backend-2.onrender.com/api/token/refresh/', {
+          refresh: refreshToken,
         });
 
         if (res.status === 200) {
           localStorage.setItem('access_token', res.data.access);
-          // Повторюємо оригінальний запит з новим токеном
           api.defaults.headers.common['Authorization'] = `Bearer ${res.data.access}`;
           return api(originalRequest);
         }
@@ -39,7 +40,6 @@ api.interceptors.response.use(
         // Якщо навіть Refresh токен не спрацював — на вихід
         localStorage.clear();
         window.location.href = '/login';
-        return Promise.reject(refreshError);
       }
     }
     return Promise.reject(error);
